@@ -14,7 +14,9 @@ class PlayScene extends Phaser.Scene{
 		this.pipeVerticalDistanceRange = [100, 250];
 		this.pipeHorizontalDistanceRange = [500, 550];
 		this.pipeHorizontalDistance = 0;
-		this.flapVelocity = 250;
+		this.flapVelocity = 300;
+		this.score = 0;
+		this.scoreText = '';
 	}
 
 	// MAIN GAME FUNCTIONS
@@ -30,6 +32,8 @@ class PlayScene extends Phaser.Scene{
 	  this.createBG();
 	  this.createBird();
 	  this.createPipes();
+	  this.createColliders();
+	  this.createScore();
 	  this.handleInputs();	
 
 	  console.log(this.bird);
@@ -46,15 +50,20 @@ class PlayScene extends Phaser.Scene{
 
 	createBird(){
 	  this.bird = this.physics.add.sprite(this.config.startPosition.x, this.config.startPosition.y, 'bird').setOrigin(0);
-	  this.bird.body.gravity.y = 400;
+	  this.bird.body.gravity.y = 600;
+	  this.bird.setCollideWorldBounds(true);
 	}
 
 	createPipes(){
 	  this.pipes = this.physics.add.group();
 
 	  for(let i = 0; i < PIPES_RENDER_COUNT; i++){
-	    const upperPipe = this.pipes.create(0, 0, 'pipe').setOrigin(0, 1);
-	    const lowerPipe = this.pipes.create(0, 0, 'pipe').setOrigin(0);
+	    const upperPipe = this.pipes.create(0, 0, 'pipe')
+	    							.setImmovable(true)
+	    							.setOrigin(0, 1);
+	    const lowerPipe = this.pipes.create(0, 0, 'pipe')
+	    							.setImmovable(true)
+	    							.setOrigin(0);
 
 	    this.placePipe(upperPipe, lowerPipe);
 	  }
@@ -62,6 +71,15 @@ class PlayScene extends Phaser.Scene{
 	  this.pipes.setVelocityX(-200);
 	  // pipe.body.allowGravity = false;
 	  // bird.body.velocity.x = velocity;
+	}
+
+	createColliders(){
+		this.physics.add.collider(this.bird, this.pipes, this.gameOver, null, this);
+	}
+
+	createScore(){
+		this.score = 0;
+		this.scoreText = this.add.text(16, 16 , `Score: ${0}`, { fontSize: '32px', fill: '#000'});
 	}
 
 	handleInputs(){
@@ -94,24 +112,37 @@ class PlayScene extends Phaser.Scene{
 
 	      if (tempPipes.length === 2) {
 	        this.placePipe(...tempPipes);
+	        this.increaseScore();
 	      }
 	    }
 	  });
 	}
 
 	checkGameStatus(){
-	  (this.bird.y <= 0 - this.bird.height || this.bird.y >= this.config.height) && this.restart();		
+	  (this.bird.y <= 0 || this.bird.getBounds().bottom >= this.config.height) && this.gameOver();		
 	}
 
-	restart(){
-	  this.bird.x = this.config.startPosition.x;
-	  this.bird.y = this.config.startPosition.y;
-	  this.bird.body.velocity.y = 0;
+	gameOver(){
+	  this.physics.pause();
+	  this.bird.setTint(0xff0000);
+
+	  this.time.addEvent({
+	  	delay: 1000,
+	  	callback: ()=>{
+	  		this.scene.restart();
+	  	},
+	  	loop: false
+	  })		
 	}
 
 	// MAIN FUNCTIONS
 	flap(){
 	  this.bird.body.velocity.y = -this.flapVelocity;
+	}
+
+	increaseScore(){
+		this.score++;
+		this.scoreText.setText(`Score: ${this.score}`);
 	}
 
 }
