@@ -1,12 +1,11 @@
-import Phaser from 'phaser';
+import BaseScene from './BaseScene';
 
 const PIPES_RENDER_COUNT = 4;
+const BEST_SCORE_KEY = 'bestScore';
 
-class PlayScene extends Phaser.Scene{
+class PlayScene extends BaseScene{
 	constructor(config){
-		super('PlayScene');
-
-		this.config = config;
+		super('PlayScene', config);
 
 		this.bird = null;
 		this.pipes = null;
@@ -19,21 +18,15 @@ class PlayScene extends Phaser.Scene{
 		this.scoreText = '';
 	}
 
-	// MAIN GAME FUNCTIONS
-	// for loading images, sprites, animations
-	preload(){
-	  var assetsPath = 'assets/';
-	  this.load.image('sky', assetsPath + 'sky.png');
-	  this.load.image('bird', assetsPath + 'bird.png');
-	  this.load.image('pipe', assetsPath + 'pipe.png');
-	}
+	// MAIN GAME FUNCTIONS	
 
 	create(){
-	  this.createBG();
+	  super.create();
 	  this.createBird();
 	  this.createPipes();
 	  this.createColliders();
 	  this.createScore();
+	  this.createPauseBtn();
 	  this.handleInputs();	
 
 	  console.log(this.bird);
@@ -42,10 +35,6 @@ class PlayScene extends Phaser.Scene{
 	update(time, delta){  
 	  this.checkGameStatus();
 	  this.recyclePipes();
-	}
-
-	createBG(){
-	  this.add.image(0, 0, 'sky').setOrigin(0);
 	}
 
 	createBird(){
@@ -73,13 +62,26 @@ class PlayScene extends Phaser.Scene{
 	  // bird.body.velocity.x = velocity;
 	}
 
+	createPauseBtn(){
+		const pauseBtn = this.physics.add.image(this.config.width -10, this.config.height - 10, 'pauseBtn')
+										.setInteractive()
+										.setScale(3)
+										.setOrigin(1);
+		pauseBtn.on('pointerdown', ()=>{
+			this.physics.pause() && this.scene.pause();
+		});									
+	}
+
 	createColliders(){
 		this.physics.add.collider(this.bird, this.pipes, this.gameOver, null, this);
 	}
 
 	createScore(){
+		const bestScore = localStorage.getItem(BEST_SCORE_KEY);
+
 		this.score = 0;
 		this.scoreText = this.add.text(16, 16 , `Score: ${0}`, { fontSize: '32px', fill: '#000'});
+		this.add.text(16, 52 , `Best Score: ${bestScore || 0}`, { fontSize: '16px', fill: '#000'});
 	}
 
 	handleInputs(){
@@ -113,6 +115,7 @@ class PlayScene extends Phaser.Scene{
 	      if (tempPipes.length === 2) {
 	        this.placePipe(...tempPipes);
 	        this.increaseScore();
+	        this.saveBestScore();
 	      }
 	    }
 	  });
@@ -122,9 +125,20 @@ class PlayScene extends Phaser.Scene{
 	  (this.bird.y <= 0 || this.bird.getBounds().bottom >= this.config.height) && this.gameOver();		
 	}
 
+	saveBestScore(){
+	  const bestScoreText = localStorage.getItem(BEST_SCORE_KEY);
+	  const bestScore = bestScoreText && parseInt(bestScoreText, 10);
+
+	  if(!bestScore || this.score > bestScore){
+	  	localStorage.setItem(BEST_SCORE_KEY, this.score);
+	  }
+	}
+
 	gameOver(){
 	  this.physics.pause();
 	  this.bird.setTint(0xff0000);
+
+	  this.saveBestScore();
 
 	  this.time.addEvent({
 	  	delay: 1000,
