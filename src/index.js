@@ -1,7 +1,9 @@
 import Phaser from 'phaser';
-import PlayScene from './scenes/PlayScene';
+import PreloadScene from './scenes/PreloadScene';
 import MenuScene from './scenes/MenuScene';
-import PreloadScene from './scenes/PreloadScene'
+import PlayScene from './scenes/PlayScene';
+import ScoreScene from './scenes/ScoreScene';
+import PauseScene from './scenes/PauseScene';
 
 const WIDTH = 800;
 const HEIGHT = 600;
@@ -12,7 +14,7 @@ const SHARED_CONFIG = {
   startPosition: BIRD_POSITION
 }
 
-const scenes = [PreloadScene, MenuScene, PlayScene];
+const scenes = [PreloadScene, MenuScene, ScoreScene, PlayScene, PauseScene];
 
 const initScenes = () => scenes.map( scene => new scene(SHARED_CONFIG) );
 

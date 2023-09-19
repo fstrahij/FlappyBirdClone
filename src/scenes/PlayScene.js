@@ -27,9 +27,8 @@ class PlayScene extends BaseScene{
 	  this.createColliders();
 	  this.createScore();
 	  this.createPauseBtn();
-	  this.handleInputs();	
-
-	  console.log(this.bird);
+	  this.handleInputs();
+	  this.listenEvents();	
 	}
 
 	update(time, delta){  
@@ -67,9 +66,7 @@ class PlayScene extends BaseScene{
 										.setInteractive()
 										.setScale(3)
 										.setOrigin(1);
-		pauseBtn.on('pointerdown', ()=>{
-			this.physics.pause() && this.scene.pause();
-		});									
+		pauseBtn.on('pointerdown', ()=> this.physics.pause() && this.scene.pause() && this.scene.launch('PauseScene'));									
 	}
 
 	createColliders(){
@@ -87,6 +84,40 @@ class PlayScene extends BaseScene{
 	handleInputs(){
 	  this.input.on('pointerdown', this.flap, this);
 	  this.input.keyboard.on('keydown_SPACE', this.flap, this);
+	}
+
+	listenEvents(){	
+		if(this.pauseEvent) { return; }
+
+		this.pauseEvent = this.events.on('resume', ()=>{
+			if(this.countdownText && this.countdownText.text){	
+				this.countdownText.setText('');
+				this.timedEvent.remove();			
+				this.countdownText = null;
+			}
+
+			this.initialTime = 3;	
+
+			this.countdownText = this.add.text(this.screenCenter.x, this.screenCenter.y, `Fly in: ${this.initialTime}`, this.fontOptions)
+										.setOrigin(0.5, 1);	
+
+			this.timedEvent = this.time.addEvent({
+				delay: 1000,
+				callback: this.countdown,
+				callbackScope: this,
+				loop: true
+			});
+		});
+	}
+
+	countdown(){
+		this.initialTime--;
+		this.countdownText.setText(`Fly in: ${this.initialTime}`);
+		if(this.initialTime <= 0){
+			this.countdownText.setText('');
+			this.physics.resume();
+			this.timedEvent.remove();
+		}
 	}
 
 	placePipe(upperPipe, lowerPipe){

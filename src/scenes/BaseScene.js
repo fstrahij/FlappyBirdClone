@@ -12,6 +12,8 @@ class BaseScene extends Phaser.Scene{
 
 	create(){
 		this.add.image(0, 0, 'sky').setOrigin(0);
+
+		this.config.isBackBtn && this.createBackBtn();
 	}
 
 	createMenu(menu, setMenuEvents){
@@ -22,6 +24,16 @@ class BaseScene extends Phaser.Scene{
 			screenCenterMultiplier += this.lineHeight;
 			setMenuEvents(menuItem);
 		})
+	}
+
+	createBackBtn(){
+		const backBtn = this.physics.add.image(10, this.config.height - 10, 'backBtn')
+										.setInteractive()
+										.setScale(2)
+										.setOrigin(0, 1);
+
+
+		backBtn.on('pointerdown', () => this.scene.start('MenuScene') );
 	}
 }
 

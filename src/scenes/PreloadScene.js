@@ -12,6 +12,7 @@ class PreloadScene extends Phaser.Scene{
 	  this.load.image('bird', assetsPath + 'bird.png');
 	  this.load.image('pipe', assetsPath + 'pipe.png');
 	  this.load.image('pauseBtn', assetsPath + 'pause.png');
+	  this.load.image('backBtn', assetsPath + 'back.png');
 	}
 
 	create(){
