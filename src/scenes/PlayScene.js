@@ -9,14 +9,16 @@ class PlayScene extends BaseScene{
 
 		this.bird = null;
 		this.pipes = null;
+		this.pauseBtn = null;
+		this.isPaused = false;
 
 		this.pipeVerticalDistanceRange = [100, 250];
 		this.pipeHorizontalDistanceRange = [500, 550];
 		this.pipeHorizontalDistance = 0;
 		this.flapVelocity = 300;
+
 		this.score = 0;
 		this.scoreText = '';
-		this.pauseBtn = null;
 	}
 
 	// MAIN GAME FUNCTIONS	
@@ -63,11 +65,13 @@ class PlayScene extends BaseScene{
 	}
 
 	createPauseBtn(){
+		this.isPaused = false;
 		this.pauseBtn = this.physics.add.image(this.config.width -10, this.config.height - 10, 'pauseBtn')
 										.setInteractive()
 										.setScale(3)
 										.setOrigin(1);
 		this.pauseBtn.on('pointerdown', ()=> {
+			this.isPaused = true;
 			this.physics.pause() && this.scene.pause();
 			this.pauseBtn.disableInteractive();
 			this.scene.launch('PauseScene');
@@ -114,10 +118,11 @@ class PlayScene extends BaseScene{
 		this.initialTime--;
 		this.countdownText.setText(`Fly in: ${this.initialTime}`);
 		if(this.initialTime <= 0){
+			this.isPaused = false;
 			this.countdownText.setText('');
 			this.physics.resume();
-			this.timedEvent.remove();
 			this.pauseBtn.setInteractive();
+			this.timedEvent.remove();
 		}
 	}
 
@@ -183,6 +188,7 @@ class PlayScene extends BaseScene{
 
 	// MAIN FUNCTIONS
 	flap(){
+	  if(this.isPaused) { return; }		
 	  this.bird.body.velocity.y = -this.flapVelocity;
 	}
 
