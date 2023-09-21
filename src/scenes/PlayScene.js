@@ -16,6 +16,7 @@ class PlayScene extends BaseScene{
 		this.flapVelocity = 300;
 		this.score = 0;
 		this.scoreText = '';
+		this.pauseBtn = null;
 	}
 
 	// MAIN GAME FUNCTIONS	
@@ -62,11 +63,15 @@ class PlayScene extends BaseScene{
 	}
 
 	createPauseBtn(){
-		const pauseBtn = this.physics.add.image(this.config.width -10, this.config.height - 10, 'pauseBtn')
+		this.pauseBtn = this.physics.add.image(this.config.width -10, this.config.height - 10, 'pauseBtn')
 										.setInteractive()
 										.setScale(3)
 										.setOrigin(1);
-		pauseBtn.on('pointerdown', ()=> this.physics.pause() && this.scene.pause() && this.scene.launch('PauseScene'));									
+		this.pauseBtn.on('pointerdown', ()=> {
+			this.physics.pause() && this.scene.pause();
+			this.pauseBtn.disableInteractive();
+			this.scene.launch('PauseScene');
+		});									
 	}
 
 	createColliders(){
@@ -90,11 +95,6 @@ class PlayScene extends BaseScene{
 		if(this.pauseEvent) { return; }
 
 		this.pauseEvent = this.events.on('resume', ()=>{
-			if(this.countdownText && this.countdownText.text){	
-				this.countdownText.setText('');
-				this.timedEvent.remove();			
-				this.countdownText = null;
-			}
 
 			this.initialTime = 3;	
 
@@ -117,6 +117,7 @@ class PlayScene extends BaseScene{
 			this.countdownText.setText('');
 			this.physics.resume();
 			this.timedEvent.remove();
+			this.pauseBtn.setInteractive();
 		}
 	}
 
