@@ -2,6 +2,11 @@ import BaseScene from './BaseScene';
 
 const PIPES_RENDER_COUNT = 4;
 const BEST_SCORE_KEY = 'bestScore';
+const DIFFICULTY = {
+	EASY: 'EASY',
+	NORMAL: 'NORMAL',
+	HARD: 'HARD'
+};
 
 class PlayScene extends BaseScene{
 	constructor(config){
@@ -12,10 +17,23 @@ class PlayScene extends BaseScene{
 		this.pauseBtn = null;
 		this.isPaused = false;
 
-		this.pipeVerticalDistanceRange = [100, 250];
-		this.pipeHorizontalDistanceRange = [500, 550];
 		this.pipeHorizontalDistance = 0;
 		this.flapVelocity = 300;
+		this.currentDifficulty = DIFFICULTY.EASY;
+		this.difficulties = {
+			'EASY': {
+				pipeHorizontalDistanceRange: [300, 350],
+				pipeVerticalDistanceRange: [150, 200]
+			},
+			'NORMAL': {
+				pipeHorizontalDistanceRange: [280, 330],
+				pipeVerticalDistanceRange: [140, 190]
+			},
+			'HARD': {
+				pipeHorizontalDistanceRange: [250, 310],
+				pipeVerticalDistanceRange: [120, 170]
+			}
+		}
 
 		this.score = 0;
 		this.scoreText = '';
@@ -31,7 +49,7 @@ class PlayScene extends BaseScene{
 	  this.createScore();
 	  this.createPauseBtn();
 	  this.handleInputs();
-	  this.listenEvents();	
+	  this.listenEvents();		  
 	}
 
 	update(time, delta){  
@@ -40,9 +58,27 @@ class PlayScene extends BaseScene{
 	}
 
 	createBird(){
-	  this.bird = this.physics.add.sprite(this.config.startPosition.x, this.config.startPosition.y, 'bird').setOrigin(0);
+	  this.bird = this.physics.add.sprite(this.config.startPosition.x, this.config.startPosition.y, 'bird')
+	  							  .setFlipX(true)	
+	  							  .setScale(3)
+	  							  .setOrigin(0);
+	  
+	  this.bird.setBodySize(this.bird.width, this.bird.height - 7);
 	  this.bird.body.gravity.y = 600;
 	  this.bird.setCollideWorldBounds(true);
+
+	  this.anims.create({
+	  	key: 'fly',
+	  	frames: this.anims.generateFrameNumbers('bird', {start: 9, end: 15}),
+	  	//24 fps default, it will play animation consisting of 24 frames in second
+	  	// in case of frameRate 2 and sprite of 8 frames animation will play in
+	  	// 4 sec; 8 / 2 = 4
+	  	frameRate: 8,
+	  	//it will repeat indefinitely
+	  	repeat: -1
+	  });
+
+	  this.bird.play('fly');
 	}
 
 	createPipes(){
@@ -127,8 +163,9 @@ class PlayScene extends BaseScene{
 	}
 
 	placePipe(upperPipe, lowerPipe){
-	  const pipeHorizontalDistance = Phaser.Math.Between(...this.pipeHorizontalDistanceRange) + this.getMostRightX();
-	  const pipeVerticalDistance = Phaser.Math.Between(...this.pipeVerticalDistanceRange);
+	  const difficulty = this.difficulties[ this.currentDifficulty ];
+	  const pipeHorizontalDistance = Phaser.Math.Between(...difficulty.pipeHorizontalDistanceRange) + this.getMostRightX();
+	  const pipeVerticalDistance = Phaser.Math.Between(...difficulty.pipeVerticalDistanceRange);
 	  const pipeVerticalPosition = Phaser.Math.Between(0 + 20, this.config.height - 20 - pipeVerticalDistance);
 
 	  [upperPipe.x, upperPipe.y] = [pipeHorizontalDistance, pipeVerticalPosition];
@@ -153,6 +190,7 @@ class PlayScene extends BaseScene{
 	        this.placePipe(...tempPipes);
 	        this.increaseScore();
 	        this.saveBestScore();
+	        this.setDifficulty();
 	      }
 	    }
 	  });
@@ -169,6 +207,18 @@ class PlayScene extends BaseScene{
 	  if(!bestScore || this.score > bestScore){
 	  	localStorage.setItem(BEST_SCORE_KEY, this.score);
 	  }
+	}
+
+	setDifficulty(){
+		console.log(this.currentDifficulty);
+
+		if(this.score > 3){
+			this.currentDifficulty = DIFFICULTY.NORMAL;
+		}
+
+		if(this.score > 5){
+			this.currentDifficulty = DIFFICULTY.HARD;
+		}
 	}
 
 	gameOver(){
