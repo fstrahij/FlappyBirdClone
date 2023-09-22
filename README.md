@@ -1,2 +1,2 @@
 # FlappyBirdClone
-Flappy Bird Clone game build for practise with phaser js
+Flappy Bird Clone game build to practise with phaser js
